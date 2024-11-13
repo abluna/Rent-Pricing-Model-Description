@@ -3,12 +3,12 @@ import numpy as np
 
 
 def abe_says_hi():
-    print("abraham is very happy")
+    print("abraham is ok")
 
 def clean_data(df, print_results=True):
     if print_results:
         rows_before = df.shape[0]
-        print(f'Rows before cleaning: {rows_before}')
+        print(f'Rows before cleaning: {rows_before:,}')
 
     ## Remove lists with no amenities
     df = df[df['amenities'].notnull()].copy()
@@ -21,7 +21,8 @@ def clean_data(df, print_results=True):
 
     if print_results:
         rows_after = df.shape[0]
-        print(f'Rows after cleaning: {rows_after}')
+        print(f'Rows after cleaning: {rows_after:,}')
+        print(f'Removed {rows_before - rows_after:,} rows')
 
     return df
 
@@ -33,18 +34,20 @@ def set_up_features(df):
     df['body_length'] = df['body'].str.len()
 
     ## amenities = create dummies for a few amenities
-    df['amenities_parking'] = df['amenities'].str.contains('parking', case=False) * 1
-    df['amenities_gym'] = df['amenities'].str.contains('gym', case=False) * 1
-    df['amenities_pool'] = df['amenities'].str.contains('pool', case=False) * 1
-    df['amenities_washer'] = df['amenities'].str.contains('washer', case=False) * 1
+    df['amenities_parking'] = df['amenities'].str.contains('parking', case=False, na = False) * 1
+    df['amenities_gym'] = df['amenities'].str.contains('gym', case=False, na = False) * 1
+    df['amenities_pool'] = df['amenities'].str.contains('pool', case=False, na = False) * 1
+    df['amenities_washer'] = df['amenities'].str.contains('washer', case=False, na = False) * 1
 
     ## has_photo = dummies
-    df['photo_thumbnail'] = df['has_photo'].str.contains('thumbnail', case=False) * 1
+    df['photo_thumbnail'] = df['has_photo'].str.contains('thumbnail', case=False, na = False) * 1
 
     ## pets_allowed = dummies
-    df['pets_dogs'] = df['pets_allowed'].str.contains('dog', case=False) * 1
-    df['pets_cat'] = df['pets_allowed'].str.contains('cat', case=False) * 1
+    df['pets_dogs'] = df['pets_allowed'].str.contains('dog', case=False, na = False) * 1
+    df['pets_cat'] = df['pets_allowed'].str.contains('cat', case=False, na = False) * 1
 
+    ## df.fillna(value={'pets_cat': 0, 'pets_dogs': 0}, inplace=True)
+    
     ## state = create dummies
     df = pd.get_dummies(df,
                         prefix=['state'],
@@ -52,8 +55,22 @@ def set_up_features(df):
                         columns=['state'],
                         dtype=int)
 
-    ## Replace NaNs with zero
-    df = df.fillna(0)
+    return df
+
+
+def remove_empty_rows(df, cols=None):
+
+    rows_before = df.shape[0]
+
+    if cols is None:
+        df = df.dropna()
+    else:
+        print("Dropping Selected Columns...")
+        df = df.dropna(subset=cols)
+
+    rows_after = df.shape[0]
+
+    print(f"Dropped {rows_before - rows_after:,} out of {rows_before:,} rows")
 
     return df
 
@@ -90,10 +107,9 @@ def create_price_bins(df, print_results=True, category_names = None):
     return df
 
 
-def get_city_features(df):
-    ## Add distance to nearest city
-    city_locations = pd.read_csv('/Users/abrahambaldenegro/Documents/House Prediction Model/City Locations.csv')
+def get_city_features(df, city_locations):
 
+    ## Add distance to nearest city
     cities = city_locations["City"]
 
     ## To store results
