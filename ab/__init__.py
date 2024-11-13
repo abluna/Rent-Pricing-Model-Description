@@ -3,7 +3,7 @@ import numpy as np
 
 
 def abe_says_hi():
-    print("abraham is ok")
+    print("fixing dummies")
 
 def clean_data(df, print_results=True):
     if print_results:
@@ -49,11 +49,13 @@ def set_up_features(df):
     ## df.fillna(value={'pets_cat': 0, 'pets_dogs': 0}, inplace=True)
     
     ## state = create dummies
+    df['orig_state'] = df['state']
     df = pd.get_dummies(df,
                         prefix=['state'],
                         prefix_sep='_',
                         columns=['state'],
-                        dtype=int)
+                        dtype=int,
+                        drop_first=False)
 
     return df
 
@@ -94,7 +96,7 @@ def create_price_bins(df, print_results=True, category_names = None):
             '02 - Low Price ($1K to $1.2K)',
             '03 - Medium Price ($1.2K to $1.5K)',
             '04 - High Price ($1.5K to $2K)',
-            '05 - Very High Price ($2K to $3K)',
+            '05 - Very High Price ($2K to ß$3K)',
             '06 - Highly Premium ($3K+)'
         ]
 
@@ -135,10 +137,14 @@ def get_city_features(df, city_locations):
 
     df = pd.concat([df, dist_data], axis=1)
 
+    ## Create a duplicate city column
+    df['orig_closest_city'] = df['closest_city']
+    
     df = pd.get_dummies(df,
                         prefix=[''],
                         prefix_sep='',
                         columns=['closest_city'],
-                        dtype=int)
+                        dtype=int,
+                        drop_first=False)
 
     return df
