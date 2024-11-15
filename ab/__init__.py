@@ -16,6 +16,9 @@ def clean_data(df, print_results=True):
     ## Remove lists with no latitude
     df = df[df['latitude'].notnull()].copy()
 
+    ## Remove if no state
+    df = df[df['state'].notnull()].copy()
+
     ## Remove Egregious prices that are obviously incorrect
     df = df[df['price'] < 5000].copy()
 
